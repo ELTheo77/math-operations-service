@@ -12,128 +12,179 @@ This microservice provides three mathematical operations:
 ### Key Features
 
 - **FastAPI** async framework for high performance
-- **Pydantic** models for request/response validation (mandatory requirement)
+- **Pydantic** models for request/response validation
 - **SQLite** database for operation history persistence
-- **In-memory caching** with TTL support for improved performance
+- **Dictionary-based caching** with TTL support
 - **CLI interface** using Click for command-line operations
 - **Docker** support for easy deployment
 - **Comprehensive logging** and error handling
+- **Flake8** linting for code quality
 - **API documentation** with automatic OpenAPI/Swagger UI
 
-## Architecture
-
-The service follows a clean architecture pattern with clear separation of concerns:
+## Project Structure
 
 ```
-├── API Layer (FastAPI endpoints)
-├── Service Layer (Business logic)
-├── Data Layer (SQLAlchemy + SQLite)
-└── Cache Layer (In-memory dictionary-based cache)
+math-operations-service/
+├── app/
+│   ├── api/
+│   │   ├── __init__.py
+│   │   └── endpoints.py         # API endpoints
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── config.py           # Settings management
+│   │   └── logging.py          # Logging configuration
+│   ├── db/
+│   │   ├── __init__.py
+│   │   ├── base.py             # Database configuration
+│   │   └── session.py          # Session management
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── database.py         # SQLAlchemy models
+│   │   └── schemas.py          # Pydantic schemas
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── calculator.py       # Math operations logic
+│   │   └── cache.py            # Cache service
+│   ├── utils/
+│   │   └── __init__.py
+│   ├── __init__.py
+│   └── main.py                 # FastAPI application
+├── cli/
+│   ├── __init__.py
+│   └── commands.py             # Click CLI commands
+├── tests/
+│   ├── __init__.py
+│   ├── test_api.py
+│   └── test_services.py
+├── data/                       # SQLite database (created automatically)
+├── logs/                       # Application logs (created automatically)
+├── .env                        # Environment variables
+├── .env.example               # Example environment configuration
+├── .flake8                    # Flake8 linting configuration
+├── .gitignore
+├── Dockerfile
+├── docker-compose.yml
+├── Makefile
+├── requirements.txt           # Python dependencies
+├── run.py                     # Application runner
+└── setup.py                   # CLI installation setup
 ```
-
-### Design Decisions
-
-1. **Async Architecture**: Used FastAPI with async/await for better performance and scalability
-2. **Caching Strategy**: Implemented LRU cache with TTL to balance memory usage and performance
-3. **Database Choice**: SQLite for simplicity, easily replaceable with PostgreSQL/MySQL
-4. **Error Handling**: Comprehensive error handling with proper HTTP status codes
-5. **Extensibility**: Easy to add new operations by extending the OperationType enum
 
 ## Installation
 
-### Using Docker (Recommended)
+### Prerequisites
+- Python 3.8+ (tested with 3.12)
+- pip package manager
 
+### Setup Instructions
+
+1. **Clone the repository and navigate to project directory**
 ```bash
-# Build and run with docker-compose
-docker-compose up --build
-
-# Or build manually
-docker build -t math-operations .
-docker run -p 8000:8000 math-operations
+cd math-operations-service
 ```
 
-### Local Installation
-
+2. **Install dependencies**
 ```bash
-# Create virtual environment
+# Install with user flag to avoid permission issues
+pip install --user -r requirements.txt
+
+# Or use a virtual environment (recommended)
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
+venv\Scripts\activate  # Windows
+source venv/bin/activate  # Linux/Mac
 pip install -r requirements.txt
-
-# Install CLI
-pip install -e .
-
-# Run the service
-uvicorn app.main:app --reload
 ```
+
+3. **Set up environment variables**
+```bash
+# Copy the example file
+copy .env.example .env  # Windows
+cp .env.example .env  # Linux/Mac
+```
+
+4. **Install CLI tool (optional)**
+```bash
+pip install --user -e .
+```
+
+5. **Run the application**
+```bash
+python run.py
+```
+
+The API will be available at `http://localhost:8000`
 
 ## Usage
 
-### REST API
-
-The API is available at `http://localhost:8000` with interactive documentation at `http://localhost:8000/docs`
-
-#### Calculate Power
-```bash
-curl -X POST "http://localhost:8000/api/v1/calculate" \
-  -H "Content-Type: application/json" \
-  -d '{"operation": "power", "value": 2, "exponent": 10}'
-```
-
-#### Calculate Fibonacci
-```bash
-curl -X POST "http://localhost:8000/api/v1/calculate" \
-  -H "Content-Type: application/json" \
-  -d '{"operation": "fibonacci", "value": 10}'
-```
-
-#### Calculate Factorial
-```bash
-curl -X POST "http://localhost:8000/api/v1/calculate" \
-  -H "Content-Type: application/json" \
-  -d '{"operation": "factorial", "value": 5}'
-```
-
-#### View History
-```bash
-curl "http://localhost:8000/api/v1/history?limit=10"
-```
-
-### CLI Interface
-
-After installing the CLI with `pip install -e .`, you can use:
+### Running the Application
 
 ```bash
-# Calculate operations
-math-cli power --base 2 --exponent 10
-math-cli fibonacci --number 20
-math-cli factorial --number 5
-
-# View history
-math-cli history --limit 10
-math-cli history --operation fibonacci
-
-# Cache management
-math-cli cache-stats
-math-cli clear-cache
+python run.py
 ```
 
-## Code Quality
+The application requires two terminals:
+- **Terminal 1**: Run the API server
+- **Terminal 2**: Execute CLI commands or run tests
 
-The project uses:
-- **flake8** for linting (configured in `.flake8`)
-- **Type hints** throughout the codebase
-- **Pydantic** for data validation
-- **Comprehensive error handling**
+### REST API Usage
 
-Run linting:
+API documentation is available at `http://localhost:8000/docs` when the server is running.
+
+#### Example API Calls
+
+**Power Calculation:**
 ```bash
-flake8 app/ cli/ tests/
+curl -X POST "http://localhost:8000/api/v1/calculate" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"operation\": \"power\", \"value\": 2, \"exponent\": 10}"
 ```
 
-## API Endpoints
+**Fibonacci Calculation:**
+```bash
+curl -X POST "http://localhost:8000/api/v1/calculate" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"operation\": \"fibonacci\", \"value\": 10}"
+```
+
+**Factorial Calculation:**
+```bash
+curl -X POST "http://localhost:8000/api/v1/calculate" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"operation\": \"factorial\", \"value\": 5}"
+```
+
+### CLI Interface Usage
+
+The CLI requires the API to be running. Use a second terminal for CLI commands.
+
+#### Method 1: Python Module (Recommended - Always Works)
+```bash
+# Navigate to project directory
+cd math-operations-service
+
+# Execute commands
+python -m cli.commands power --base 2 --exponent 10
+python -m cli.commands fibonacci --number 20
+python -m cli.commands factorial --number 5
+python -m cli.commands history --limit 10
+python -m cli.commands cache-stats
+python -m cli.commands clear-cache
+```
+
+#### Method 2: Using math-cli Command (After pip install -e .)
+
+From Scripts directory (PowerShell):
+```bash
+cd C:\Users\[YourUsername]\AppData\Roaming\Python\Python312\Scripts
+.\math-cli power --base 2 --exponent 10
+```
+
+From project directory:
+```bash
+C:\Users\[YourUsername]\AppData\Roaming\Python\Python312\Scripts\math-cli power --base 2 --exponent 10
+```
+
+### API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -144,47 +195,89 @@ flake8 app/ cli/ tests/
 | GET | `/api/v1/cache/stats` | Cache statistics |
 | DELETE | `/api/v1/cache` | Clear cache |
 
-## Configuration
-
-Environment variables (create `.env` file):
-```env
-DATABASE_URL=sqlite+aiosqlite:///data/math_operations.db
-LOG_LEVEL=INFO
-CACHE_TTL_SECONDS=3600
-CACHE_MAX_SIZE=1000
-```
-
-## Performance Considerations
-
-1. **Caching**: Results are cached with LRU eviction and TTL
-2. **Async Operations**: All I/O operations are async
-3. **Database Indexing**: Operation type is indexed for faster queries
-4. **Efficient Algorithms**: 
-   - Fibonacci uses dynamic programming
-   - Power uses built-in optimized function
-   - Factorial uses iterative approach
-
-## Future Enhancements
-
-While keeping within project requirements, potential improvements include:
-- Redis for distributed caching
-- JWT authentication
-- Prometheus metrics integration
-- Message queue integration for async processing
-- Rate limiting
-- GraphQL API option
-
 ## Testing
 
-Run tests with:
 ```bash
+# Run all tests
 pytest tests/ -v
+
+# Run specific test files
+pytest tests/test_api.py -v
+pytest tests/test_services.py -v
+
+# Check code quality
+flake8 app/ cli/ tests/
 ```
 
-## Deployment
+## Docker Support
 
-The service is containerized and ready for deployment to:
-- Kubernetes (add k8s manifests)
-- AWS ECS/Fargate
-- Google Cloud Run
-- Azure Container Instances
+### Using Docker Compose
+```bash
+# Build and run
+docker-compose up --build
+
+# Stop containers
+docker-compose down
+```
+
+### Manual Docker Build
+```bash
+# Build image
+docker build -t math-operations .
+
+# Run container
+docker run -p 8000:8000 math-operations
+```
+
+## Configuration
+
+Environment variables in `.env` file:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PROJECT_NAME` | Application name | Math Operations Microservice |
+| `VERSION` | API version | 1.0.0 |
+| `API_V1_STR` | API prefix | /api/v1 |
+| `HOST` | Server host | 0.0.0.0 |
+| `PORT` | Server port | 8000 |
+| `DATABASE_URL` | Database connection | sqlite+aiosqlite:///data/math_operations.db |
+| `CACHE_TTL_SECONDS` | Cache time-to-live | 3600 |
+| `CACHE_MAX_SIZE` | Maximum cache entries | 1000 |
+| `LOG_LEVEL` | Logging level | INFO |
+
+## Troubleshooting
+
+### CLI Command Not Found
+- Use `python -m cli.commands` instead (works everywhere)
+- From Scripts folder use: `.\math-cli` (note the .\ prefix in PowerShell)
+- Use full path: `C:\Users\[YourUsername]\AppData\Roaming\Python\Python312\Scripts\math-cli`
+
+### ModuleNotFoundError
+- Verify all files are in correct directories (see Project Structure)
+- Ensure you're in the project root directory
+
+### Permission Denied During Installation
+- Use `pip install --user -r requirements.txt`
+- Or use a virtual environment
+
+### Port Already in Use
+- Change port in `.env` file
+- Or terminate the process using port 8000
+
+### PowerShell Execution
+PowerShell requires .\ prefix for executables in current directory:
+```powershell
+.\math-cli power --base 2 --exponent 10
+```
+
+## Project Requirements Compliance
+
+- **Microframework**: FastAPI (async framework)
+- **Pydantic**: Used for all request/response serialization
+- **Database**: SQLite with SQLAlchemy
+- **CLI with Click**: Command-line interface implementation
+- **Dictionary-based caching**: In-memory cache with TTL
+- **Flake8 linting**: Code quality checks
+- **MVC Pattern**: Clean architecture with separation of concerns
+- **Extensibility**: Easy to add new operations
+- **Production-ready**: Comprehensive error handling and logging

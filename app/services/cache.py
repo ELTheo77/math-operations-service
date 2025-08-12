@@ -1,15 +1,16 @@
 """Simple in-memory caching service."""
-import json
 from datetime import datetime, timedelta
 from typing import Optional, Any, Dict
 import asyncio
 from collections import OrderedDict
 
+from app.core.config import settings
+
 
 class CacheService:
     """Dictionary-based caching service with TTL support."""
 
-    def __init__(self, max_size: int = 1000, ttl_seconds: int = 3600):
+    def __init__(self, max_size: int = None, ttl_seconds: int = None):
         """
         Initialize cache service.
         
@@ -18,8 +19,8 @@ class CacheService:
             ttl_seconds: Time-to-live for cache entries in seconds
         """
         self._cache: OrderedDict[str, Dict[str, Any]] = OrderedDict()
-        self._max_size = max_size
-        self._ttl_seconds = ttl_seconds
+        self._max_size = max_size or settings.CACHE_MAX_SIZE
+        self._ttl_seconds = ttl_seconds or settings.CACHE_TTL_SECONDS
         self._lock = asyncio.Lock()
 
     def _generate_key(self, operation: str, value: int, exponent: Optional[int] = None) -> str:

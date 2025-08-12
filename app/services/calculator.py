@@ -1,7 +1,6 @@
 """Calculator service with mathematical operations."""
 import asyncio
-from functools import lru_cache
-from typing import Tuple, Optional
+from typing import Tuple
 import time
 
 
@@ -96,38 +95,3 @@ class CalculatorService:
             result *= i
         
         return result
-
-
-class AsyncCalculatorService(CalculatorService):
-    """
-    Async calculator service with support for concurrent operations.
-    Extends the base calculator service with async task management.
-    """
-
-    @staticmethod
-    async def power_async(base: int, exponent: int) -> Tuple[int, float]:
-        """Async wrapper for power calculation."""
-        # For CPU-bound operations, run in executor
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            None,
-            lambda: asyncio.run(CalculatorService.power(base, exponent))
-        )
-
-    @staticmethod
-    async def fibonacci_async(n: int) -> Tuple[int, float]:
-        """Async wrapper for Fibonacci calculation."""
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            None,
-            lambda: asyncio.run(CalculatorService.fibonacci(n))
-        )
-
-    @staticmethod
-    async def factorial_async(n: int) -> Tuple[int, float]:
-        """Async wrapper for factorial calculation."""
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            None,
-            lambda: asyncio.run(CalculatorService.factorial(n))
-        )

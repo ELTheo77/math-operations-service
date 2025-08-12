@@ -91,7 +91,7 @@ class HealthCheckResponse(BaseModel):
 class OperationHistoryItem(BaseModel):
     """Model for operation history."""
     id: int
-    operation: OperationType
+    operation: str
     input_value: int
     exponent: Optional[int] = None
     result: Any
